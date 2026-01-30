@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+}
+
+body {
+  background: radial-gradient(circle at top center, #1a1a2e 0%, #0a0a0a 100%);
+  color: var(--foreground);
+  min-height: 100vh;
+}
+
+/* Customizing the Solana Button to look less like a generic purple block */
+.wallet-adapter-button-trigger {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 12px !important;
+  font-family: inherit !important;
+  transition: all 0.3s ease;
+}
+
+.wallet-adapter-button-trigger:hover {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 0 15px rgba(153, 69, 255, 0.5);
+}
