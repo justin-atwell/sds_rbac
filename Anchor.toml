@@ -1,0 +1,19 @@
+[toolchain]
+package_manager = "npm"
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.localnet]
+sds_rbac = "9ubrJbz2XKeesFMX3kygwyfytFWa849jUJonPEEE1YAv"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "http://127.0.0.1:8899" # Change 'localhost' to '127.0.0.1'
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "npm run test"
