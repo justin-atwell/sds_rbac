@@ -94,4 +94,7 @@ describe("sds_rbac", () => {
     }
   });
 
+  it("Checks Hierarchy and errors if the role isn't above required level", async () => {
+    
+  });
 });
