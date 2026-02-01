@@ -1,4 +1,4 @@
-Solana Directory Service (SDS) RBAC Terminal
+#Solana Directory Service (SDS) RBAC Terminal
 Project Overview
 The SDS RBAC Terminal is a decentralized identity management system built on the Solana blockchain. It enables secure, on-chain Role-Based Access Control (RBAC) by leveraging a hierarchical permission structure enforced at the smart contract level.
 
