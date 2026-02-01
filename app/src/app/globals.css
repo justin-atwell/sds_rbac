@@ -1,6 +1,7 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+/* v4 needs this explicit line to find your old config file */
+@config "../../tailwind.config.ts";
 
 :root {
   --background: #0a0a0a;

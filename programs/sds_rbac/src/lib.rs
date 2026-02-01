@@ -16,7 +16,7 @@ pub mod sds_rbac {
     }
 
     pub fn revoke_user(ctx: Context<RevokeUser>) -> Result<()> {
-        let user_role = &ctx.accounts.user_profile.role;
+        let user_role = &ctx.accounts.target_profile.role;
         msg!("Revoking role: {:?}", user_role);
 
         Ok(())
@@ -44,11 +44,11 @@ pub struct InitializeUser<'info> {
 pub struct RevokeUser<'info> {
     #[account(
         mut,
-        close = admin, //retrieves that rent money
+        close = admin, 
         seeds = [b"user-role", target_user.key().as_ref()],
-        bump
+        bump = target_profile.bump,
     )]
-    pub user_profile: Account<'info, UserProfile>,
+    pub target_profile: Account<'info, UserProfile>, // Renamed for clarity
 
     pub target_user: SystemAccount<'info>,
 
@@ -57,8 +57,9 @@ pub struct RevokeUser<'info> {
 
     #[account(
         seeds = [b"user-role", admin.key().as_ref()],
-        bump,
-        constraint = admin_profile.role == UserRole::Admin @ ErrorCode::Unauthorized
+        bump = admin_profile.bump,
+        // SECURITY: The signer's role level MUST be greater than the target's role level
+        constraint = admin_profile.role.level() > target_profile.role.level() @ ErrorCode::Unauthorized
     )]
     pub admin_profile: Account<'info, UserProfile>,
 }
