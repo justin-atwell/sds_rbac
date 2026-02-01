@@ -15,14 +15,10 @@ pub mod sds_rbac {
         Ok(())
     }
 
-    // This is a protected function
-    pub fn sensitive_operation(ctx: Context<SensitiveOp>) -> Result<()> {
-        let user_profile = &ctx.accounts.user_profile;
+    pub fn revoke_user(ctx: Context<RevokeUser>) -> Result<()> {
+        let user_role = &ctx.accounts.user_profile.role;
+        msg!("Revoking role: {:?}", user_role);
 
-        // The RBAC Check
-        require!(user_profile.role == UserRole::Admin, ErrorCode::Unauthorized);
-
-        msg!("Access Granted: Admin operation successful.");
         Ok(())
     }
 }
@@ -45,13 +41,26 @@ pub struct InitializeUser<'info> {
 }
 
 #[derive(Accounts)]
-pub struct SensitiveOp<'info> {
+pub struct RevokeUser<'info> {
     #[account(
-        seeds = [b"user-role", user.key().as_ref()],
-        bump = user_profile.bump,
+        mut,
+        close = admin, //retrieves that rent money
+        seeds = [b"user-role", target_user.key().as_ref()],
+        bump
     )]
     pub user_profile: Account<'info, UserProfile>,
-    pub user: Signer<'info>,
+
+    pub target_user: SystemAccount<'info>,
+
+    #[account(mut)]
+    pub admin: Signer<'info>,
+
+    #[account(
+        seeds = [b"user-role", admin.key().as_ref()],
+        bump,
+        constraint = admin_profile.role == UserRole::Admin @ ErrorCode::Unauthorized
+    )]
+    pub admin_profile: Account<'info, UserProfile>,
 }
 
 #[account]
@@ -63,12 +72,12 @@ pub struct UserProfile {
 }
 
 impl UserProfile {
-    pub fn has_at_least(&self, required:UserRole) -> bool {
+    pub fn has_at_least(&self, required: UserRole) -> bool {
         self.role.level() >= required.level()
     }
 }
 
-#[derive(AnchorSerialize, InitSpace, AnchorDeserialize, Clone, PartialEq, Eq)]
+#[derive(AnchorSerialize, InitSpace, AnchorDeserialize, Clone, PartialEq, Eq, Debug)]
 pub enum UserRole {
     Admin,
     Manager,
@@ -77,7 +86,7 @@ pub enum UserRole {
 
 impl UserRole {
     pub fn level(&self) -> u8 {
-        match self{
+        match self {
             UserRole::Admin => 3,
             UserRole::Manager => 2,
             UserRole::Developer => 1,
@@ -85,13 +94,12 @@ impl UserRole {
     }
 }
 
-
 #[error_code]
 pub enum ErrorCode {
     #[msg("Only the Super Admin can assign roles.")]
     NotSuperAdmin,
     #[msg("You do not have the Admin role required for this operation.")]
-    Unauthorized
+    Unauthorized,
 }
 
 #[cfg(test)]
@@ -108,7 +116,7 @@ mod tests {
         // Admin checks
         assert!(admin.level() >= UserRole::Admin.level());
         assert!(admin.level() >= UserRole::Manager.level());
-        
+
         // Manager checks
         assert!(manager.level() >= UserRole::Developer.level());
         assert!(!(manager.level() >= UserRole::Admin.level()));

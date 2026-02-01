@@ -71,20 +71,21 @@
       ]
     },
     {
-      "name": "sensitive_operation",
+      "name": "revoke_user",
       "discriminator": [
-        147,
-        113,
-        58,
-        213,
-        44,
-        245,
-        8,
-        39
+        218,
+        157,
+        199,
+        179,
+        146,
+        143,
+        101,
+        25
       ],
       "accounts": [
         {
           "name": "user_profile",
+          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -103,14 +104,43 @@
               },
               {
                 "kind": "account",
-                "path": "user"
+                "path": "target_user"
               }
             ]
           }
         },
         {
-          "name": "user",
+          "name": "target_user"
+        },
+        {
+          "name": "admin",
+          "writable": true,
           "signer": true
+        },
+        {
+          "name": "admin_profile",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114,
+                  45,
+                  114,
+                  111,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "admin"
+              }
+            ]
+          }
         }
       ],
       "args": []

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import { Program, AnchorProvider, Idl } from "@coral-xyz/anchor";
@@ -11,47 +11,77 @@ export const useRbac = () => {
     const { publicKey, wallet } = useWallet();
     const [role, setRole] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
- 
+
+    // Memoize the program so it doesn't change every render
+    const program = useMemo(() => {
+        if (!connection || !wallet) return null;
+        const provider = new AnchorProvider(connection, wallet as any, { commitment: "confirmed" });
+        return new Program(rawIdl as Idl, provider);
+    }, [connection, wallet]);
+
     useEffect(() => {
         const fetchRole = async () => {
-            // If no wallet is connected, we can't check a role
-            if (!publicKey || !wallet) {
-                setRole(null);
-                return;
-            }
-
+            if (!publicKey || !program) return;
             setLoading(true);
             try {
-                // 1. Setup the Connection Bridge
-                const provider = new AnchorProvider(connection, wallet as any, { 
-                    commitment: "confirmed" 
-                });
-                const program = new Program(rawIdl as Idl, provider);
-console.log("Available accounts:", Object.keys(program.account));
-                // 2. Find the PDA (The "Address" of your specific role on chain)
                 const [profilePda] = PublicKey.findProgramAddressSync(
                     [Buffer.from("user-role"), publicKey.toBuffer()],
                     program.programId
                 );
-
-                // 3. Try to fetch the account data
                 const account = await (program.account as any).userProfile.fetch(profilePda);
-                console.log("On-chain data found:", account);
-                // Anchor Enums come back as objects like { admin: {} }
-                // This line grabs the key name and capitalizes it
                 const roleKey = Object.keys(account.role)[0];
                 setRole(roleKey.charAt(0).toUpperCase() + roleKey.slice(1));
-
             } catch (error) {
-                console.log("No RBAC profile found for this wallet yet.");
                 setRole("Uninitialized");
             } finally {
                 setLoading(false);
             }
         };
-
         fetchRole();
-    }, [publicKey, connection, wallet]);
+    }, [publicKey, program]);
 
-    return { role, loading };
+    const revokeUser = async (targetPublicKey: PublicKey) => {
+        if (!publicKey || !wallet?.adapter || !program) {
+            console.error("Setup missing");
+            return false;
+        }
+
+        try {
+            // 1. Manually create the "Anchor-compatible" wallet
+            const anchorWallet = {
+                publicKey: publicKey,
+                signTransaction: (tx: any) => (wallet.adapter as any).signTransaction(tx),
+                signAllTransactions: (txs: any[]) => (wallet.adapter as any).signAllTransactions(txs),
+            };
+
+            // 2. Create a one-time provider for this transaction
+            const provider = new AnchorProvider(connection, anchorWallet as any, {
+                commitment: "confirmed"
+            });
+
+            // 3. Re-initialize the program with this signing provider
+            const signingProgram = new Program(rawIdl as Idl, provider);
+
+            const [profilePda] = PublicKey.findProgramAddressSync(
+                [Buffer.from("user-role"), targetPublicKey.toBuffer()],
+                signingProgram.programId
+            );
+
+            // 4. Execute the call
+            await signingProgram.methods
+                .revokeUser()
+                .accounts({
+                    userProfile: profilePda,
+                    targetUser: targetPublicKey,
+                    admin: publicKey,
+                })
+                .rpc();
+
+            return true;
+        } catch (err) {
+            console.error("Revoke failed at RPC level:", err);
+            return false;
+        }
+    };
+    return { role, loading, revokeUser };
 };

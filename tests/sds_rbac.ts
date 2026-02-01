@@ -34,28 +34,6 @@ describe("sds_rbac", () => {
     }
   });
 
-  it("Blocks a Developer from running an Admin-only operation", async () => {
-    try {
-      await program.methods
-        .sensitiveOperation()
-        .accounts({
-          user: provider.publicKey,
-        })
-        .rpc();
-
-      // If this line is reached, the security gate failed
-      assert.fail("The transaction should have been rejected by the RBAC gate.");
-    } catch (err: any) {
-      // Check for our custom ErrorCode::Unauthorized (6000)
-      assert.include(
-        err.message,
-        "Unauthorized",
-        "Error message should contain 'Unauthorized'"
-      );
-      console.log("Verified: Developer was correctly blocked from sensitive operation.");
-    }
-  });
-
   it("Blocks a random hacker from assigning roles", async () => {
     // Generate a brand new wallet that has NO SOL and NO permissions
     const hacker = anchor.web3.Keypair.generate();

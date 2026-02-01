@@ -12,7 +12,7 @@ export default function Home() {
   const [mounted, setMounted] = useState(false);
   const { connection } = useConnection();
 
-  const { role, loading } = useRbac();
+  const { role, loading, revokeUser } = useRbac();
 
   const initializeAdmin = async () => {
     // 1. Safety check
@@ -56,6 +56,16 @@ export default function Home() {
       console.error("Transaction failed:", err);
     }
   };
+
+  const handleRevoke = async () => {
+    if (!publicKey) return;
+    const success = await revokeUser(publicKey);
+    if (success) {
+      alert("Role Revoked. SOL reclaimed.");
+      window.location.reload();
+    }
+  };
+
 
   // Prevent hydration mismatch (standard practice for Solana dApps)
   useEffect(() => {
@@ -135,6 +145,15 @@ export default function Home() {
                 Initialize Admin Profile
               </button>
             )}
+            {role !== "Uninitialized" && (
+              <button
+                onClick={handleRevoke}
+                className="mt-4 text-xs text-red-400 hover:text-red-300 transition-colors underline"
+              >
+                Revoke Identity & Reclaim Rent
+              </button>
+            )}
+
           </div>
 
         </div>
