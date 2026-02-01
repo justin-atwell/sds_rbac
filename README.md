@@ -35,13 +35,19 @@ git clone https://github.com/[your-username]/sds_rbac.git
 cd sds_rbac
 
 ### Install dependencies in the app directory
+```
 cd app
 npm install
+```
 3. Deployment & Execution
+```
 Bash
+```
 
 ### Build and deploy the Anchor program
+```
 anchor build && anchor deploy
+```
 
 ### Start the development server
 ```
