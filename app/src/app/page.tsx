@@ -10,6 +10,7 @@ import { useRbac } from "@/hooks/useRbac";
 export default function Home() {
   const { publicKey, wallet, connected } = useWallet();
   const [mounted, setMounted] = useState(false);
+  const [targetWallet, setTargetWallet] = useState("");
   const { connection } = useConnection();
 
   const { role, loading, revokeUser } = useRbac();
@@ -143,6 +144,73 @@ export default function Home() {
                 </div>
               </div>
 
+              {/* Team Management Section */}
+              <div className="mt-12 w-full max-w-4xl animate-in fade-in slide-in-from-bottom-10 duration-1000">
+                <div className="p-8 rounded-[2.5rem] bg-white/5 border border-white/10 backdrop-blur-3xl">
+                  <div className="flex justify-between items-center mb-8">
+                    <div>
+                      <h2 className="text-2xl font-black tracking-tight text-white">Team Ledger</h2>
+                      <p className="text-gray-500 text-sm">Directly manage SDS network permissions</p>
+                    </div>
+
+                    {/* Target Wallet Input */}
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Enter Wallet Address..."
+                        value={targetWallet}
+                        onChange={(e) => setTargetWallet(e.target.value)}
+                        className="px-4 py-2 bg-black/40 border border-white/10 rounded-xl text-xs font-mono text-white focus:outline-none focus:border-purple-500/50 transition-all w-64"
+                      />
+                      <button
+                        onClick={() => {
+                          if (targetWallet) revokeUser(new PublicKey(targetWallet));
+                        }}
+                        className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-[10px] font-black uppercase rounded-xl transition-all"
+                      >
+                        Revoke
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Table */}
+                  <div className="overflow-hidden rounded-2xl border border-white/5">
+                    <table className="w-full text-left text-sm">
+                      <thead className="bg-white/5 text-gray-500 uppercase text-[10px] font-black tracking-widest">
+                        <tr>
+                          <th className="px-6 py-4">Identity</th>
+                          <th className="px-6 py-4">Status</th>
+                          <th className="px-6 py-4 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5">
+                        {/* When you eventually map over a list of users, it will look like this: */}
+                        <tr className="hover:bg-white/[0.02] transition-colors">
+                          <td className="px-6 py-4 font-mono text-xs text-gray-300">
+                            {publicKey?.toBase58().slice(0, 8)}...
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="px-2 py-1 rounded-md bg-green-500/10 text-green-400 text-[10px] font-bold border border-green-500/20">
+                              {role}
+                            </span>
+                          </td>
+
+                          {/* THIS IS THE PLACEMENT */}
+                          <td className="px-6 py-4 text-right">
+                            <button
+                              onClick={() => setTargetWallet(publicKey?.toBase58() || "")}
+                              className="text-[10px] font-black uppercase tracking-widest text-purple-400 hover:text-white transition-colors bg-white/5 px-3 py-1 rounded-lg border border-white/10"
+                            >
+                              Select User
+                            </button>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
               {/* Sub-grid for additional stats */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="p-6 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-between">
@@ -203,6 +271,7 @@ export default function Home() {
                 </div>
               </div>
 
+
               {/* Help / Docs Card */}
               <div className="p-8 rounded-[2rem] bg-gradient-to-t from-purple-900/10 to-transparent border border-white/5 text-left">
                 <p className="text-xs font-bold text-purple-400 uppercase mb-3">Developer Quick-Action</p>
@@ -211,6 +280,7 @@ export default function Home() {
                 </p>
               </div>
             </div>
+
 
           </div>
         )}
